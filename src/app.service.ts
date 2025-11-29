@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { Client, GatewayIntentBits, TextChannel } from 'discord.js';
+import { Client, GatewayIntentBits } from 'discord.js';
 import axios from 'axios';
 
 @Injectable()
@@ -32,7 +32,7 @@ export class AppService implements OnModuleInit {
 
       const text = msg.content
         .replace(`<@${userId}>`, '')
-        .replace(`<@!${userId}>`, '') // Discord usa as duas formas
+        .replace(`<@!${userId}>`, '')
         .trim();
 
       const payload = {
@@ -42,19 +42,11 @@ export class AppService implements OnModuleInit {
         username: msg.author.username,
       };
 
-      const response = await axios.post(
-        process.env.N8N_WEBHOOK_URL!, // garante string
-        payload,
-      );
-
-     const answer =
-    (Array.isArray(response.data)
-    ? response.data[0]?.answer
-    : response.data?.answer) || 'Sem resposta.';
-
-
-      const channel = msg.channel as TextChannel;
-      channel.send(answer);
+      try {
+        await axios.post(process.env.N8N_WEBHOOK_URL!, payload);
+      } catch (e) {
+        console.log('Erro ao enviar para webhook:', e.message);
+      }
     });
 
     await this.client.login(process.env.DISCORD_TOKEN!);
